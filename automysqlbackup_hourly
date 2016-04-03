@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+# automysqlbackup_hourly
+# ======================
+#
+# This script is an extension of [automysqlbackup]:https://sourceforge.net/projects/automysqlbackup/, 
+# to support hourly backups of your MySQL databases.
+#
+# Compatibility
+# -------------
+#
+# Debian and Ubuntu only. Tested on production servers with Debian 8 (Jessie) and Ubuntu 14.04.
+#
+# Installation
+# ------------
+#
+# The automysqlbackup_hourly script should be copied into /etc/cron.hourly/, and
+# for ensure that is executable : chmod +x /etc/cron.hourly/automysqlbackup_hourly
+# automysqlbackup *must* be installed.
+# For testing it, just launch as root : ./automysqlbackup_hourly
+# Then, in your backup's directory, you'll see :
+#       hourly daily weekly monthly
+#
+# Every hour, you'll have a new dump for each database in hourly directory.
+#
+# How it works
+# ------------
+#
+# Every hour, it takes the last dump present in your daily or weekly directory
+# (depending on the day given by DOWEEKLY parameter), and move it to the
+# hourly/yourdb directory. Then, it launches the automysqlbackup script to
+# create a new dump in daily or weekly directory.
+# Finally, dumps older than 7 days in hourly directory are deleted. You can
+# change the number of days by changing ROTATION_DAYS variable, at the beginning
+# of the script.
+#
+
+##
+# Specific configuration variables. You can change it as you like.
+##
+
+# automysqlbackup executable path
+EXEC_PATH=/usr/sbin/automysqlbackup
+
+# automysqlbackup default config path
+CONFIG_FILE=/etc/default/automysqlbackup
+
+# Number of days for hourly dumps rotation
+ROTATION_DAYS=7
+
+##
+# End of configuration variables.
+##
+
+# automysqlbackup install check
+if [ ! -e ${EXEC_PATH} ];then
+    echo "[ERROR] automysqlbackup must be installed."
+    echo "To do this in Debian and Ubuntu : sudo apt-get install automysqlbackup" 
+    exit 1
+fi
+
+# Config file check
+if [ ! -f $CONFIG_FILE ]; then
+    echo "[ERROR] The default configuration file, $CONFIG_FILE, doesnt exists."
+fi
+
+# automysqlbackup configuration import
+source $CONFIG_FILE
+# Day number of the week 1 to 7 where 1 represents Monday
+DNOW=`date +%u`
+# The current backup day is daily, or weekly ?
+if [ $DNOW -eq $DOWEEKLY ];then
+    CURRENT_BACKUPDIR="${BACKUPDIR}/weekly"
+else
+    CURRENT_BACKUPDIR="${BACKUPDIR}/daily"
+fi
+
+# Hourly directory's check
+if [ ! -e "${BACKUPDIR}/hourly" ]; then
+    mkdir -p "${BACKUPDIR}/hourly"
+fi
+
+# Hourly backup for each DB
+for DB in $DBNAMES
+do
+    # Prepare $DB for using
+    DB="`echo $DB | sed 's/%/ /g'`"
+    DB_HOURLY_DIR="${BACKUPDIR}/hourly/${DB}"
+    DB_CURRENT_DIR="${CURRENT_BACKUPDIR}/${DB}"
+
+    # Create separate directory in "hourly" for each DB
+    if [ ! -e $DB_HOURLY_DIR ];then
+        mkdir -p $DB_HOURLY_DIR
+    fi
+
+    # If we have a dump created for this DB the previous hour, then we move it
+    # in the current DB directory. After, automysqlbackup will create the dump
+    # for this hour itself.
+    for DBDUMP in `ls "${DB_CURRENT_DIR}"`
+    do
+        DBDUMP="${DB_CURRENT_DIR}/${DBDUMP}"
+        DUMP_DATE=`stat -c %y "${DBDUMP}"`
+        DUMP_TIMESTAMP=`date -d "${DUMP_DATE}" +%s`
+        CURRENT_TIMESTAMP=`date +%s`
+        TIMESTAMPS_DIFF=`expr ${CURRENT_TIMESTAMP} - ${DUMP_TIMESTAMP}`
+        if [ $TIMESTAMPS_DIFF -gt 3600 ] && [ $TIMESTAMPS_DIFF -lt 7200 ];then
+            mv ${DBDUMP} ${DB_HOURLY_DIR}
+        fi
+    done
+done
+
+# For dumps rotation, we delete the ones older than $ROTATION_DAYS days
+find "${BACKUPDIR}/hourly" -mtime +${ROTATION_DAYS} -delete
+
+# Finally, we call automysqlbackup to create the dump of this last hour
+# in the "daily" or "weekly" directory.
+${EXEC_PATH}
