@@ -2,7 +2,7 @@ automysqlbackup_hourly
 ======================
 
 This script is an extension of [automysqlbackup](https://sourceforge.net/projects/automysqlbackup/),
-to support hourly backups of your MySQL databases.
+to support hourly backups of MySQL databases.
 
 Compatibility
 -------------
@@ -12,13 +12,13 @@ Debian and Ubuntu only. Tested on production servers with Debian 8 (Jessie) and 
 Installation
 ------------
 
-The automysqlbackup_hourly script should be copied into /etc/cron.hourly/, and
-for ensure that is executable : 
-<pre><code>chmod +x /etc/cron.hourly/automysqlbackup_hourly</code></pre>
-automysqlbackup *must* be installed.
+First, automysqlbackup *must* be installed :
+<pre><code>sudo apt-get install automysqlbackup</code></pre>
+The automysqlbackup_hourly script can be copied or linked into /etc/cron.hourly/ : 
+<pre><code>sudo ln -s automysqlbackup_hourly /etc/cron.hourly/</code></pre>
 For testing it, just launch as root : 
 <pre><code>./automysqlbackup_hourly</code></pre>
-Then, in your backup's directory, you'll see :
+Then, in your backup's directory, you will see :
 <pre><code>hourly daily weekly monthly</code></pre>
 
 Every hour, you'll have a new dump for each database in hourly directory.
