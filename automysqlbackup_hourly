@@ -112,7 +112,7 @@ do
 done
 
 # For dumps rotation, we delete the ones older than $ROTATION_DAYS days
-find "${BACKUPDIR}/hourly" -mtime +${ROTATION_DAYS} -delete
+find "${BACKUPDIR}/hourly" -mtime +${ROTATION_DAYS} -type f -delete
 
 # Finally, we call automysqlbackup to create the dump of this last hour
 # in the "daily" or "weekly" directory.
