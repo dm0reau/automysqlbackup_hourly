@@ -29,7 +29,7 @@
 # ------------
 # 
 # Every hour, it takes the last dump present in your daily or weekly directory
-# (depending on the day given by DOWEEKLY parameter), and move it to the
+# (depending on the day given by DOWEEKLY parameter), and copy it to the
 # hourly/yourdb directory. Then, it launches the automysqlbackup script to
 # create a new dump in daily or weekly directory.
 # Finally, dumps older than 7 days in hourly directory are deleted. You can
@@ -95,7 +95,7 @@ do
         mkdir -p $DB_HOURLY_DIR
     fi
 
-    # If we have a dump created for this DB the previous hour, then we move it
+    # If we have a dump created for this DB the previous hour, then we copy it
     # in the current DB directory. After, automysqlbackup will create the dump
     # for this hour itself.
     for DBDUMP in `ls "${DB_CURRENT_DIR}"`
@@ -106,7 +106,7 @@ do
         CURRENT_TIMESTAMP=`date +%s`
         TIMESTAMPS_DIFF=`expr ${CURRENT_TIMESTAMP} - ${DUMP_TIMESTAMP}`
         if [ $TIMESTAMPS_DIFF -gt 1 ] && [ $TIMESTAMPS_DIFF -lt 4000 ];then
-            mv ${DBDUMP} ${DB_HOURLY_DIR}
+            cp ${DBDUMP} ${DB_HOURLY_DIR}
         fi
     done
 done

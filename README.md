@@ -27,7 +27,7 @@ How it works
 ------------
 
 Every hour, it takes the last dump present in your daily or weekly directory
-(depending on the day given by DOWEEKLY parameter), and move it to the
+(depending on the day given by DOWEEKLY parameter), and copy it to the
 hourly/yourdb directory. Then, it launches the automysqlbackup script to
 create a new dump in daily or weekly directory.
 Finally, dumps older than 7 days in hourly directory are deleted. You can
