@@ -1,0 +1,4 @@
+[client]
+host     = db
+user     = backup_test
+password = backup_test

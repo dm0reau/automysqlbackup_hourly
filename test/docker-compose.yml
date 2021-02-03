@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  backup:
+    build: .
+    volumes:
+      - ../automysqlbackup_hourly:/root/automysqlbackup_hourly
+  db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: backup_test
+      MYSQL_USER: backup_test
+      MYSQL_PASSWORD: backup_test
