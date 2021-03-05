@@ -7,7 +7,7 @@ to support hourly backups of MySQL databases.
 Compatibility
 -------------
 
-Debian and Ubuntu only. Tested on production servers with Debian 8 (Jessie) and Ubuntu 14.04.
+Debian and Ubuntu only. Tested with Debian 10 (Buster) and Ubuntu 20.04 (Focal).
 
 Installation
 ------------
